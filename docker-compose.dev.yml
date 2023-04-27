@@ -25,19 +25,6 @@ services:
     networks:
       - app
 
-#  tests:
-#    build:
-#      dockerfile: 'Dockerfile.tests'
-#    ports:
-#      - 2345:2345 # Remote debug port
-#    env_file:
-#      - config/.env.tests
-#    networks:
-#      - app
-#      - tests-database
-#    deploy:
-#      replicas: 0
-
   db:
     image: 'postgres:12-alpine3.15'
     expose:
@@ -71,24 +58,10 @@ services:
       service: db
     networks:
       - tests-database
+    env_file:
+      - ./config/.env.tests
     deploy:
       replicas: 0
-
-  migrate-tests:
-    extends:
-      service: migrate
-    depends_on:
-      - tests-db
-    networks:
-      - tests-database
-    command: [ "-path", "/migrations", "-database", "${TESTS_DB_DSN}?sslmode=disable", "up" ]
-
-  rollback-tests:
-    extends:
-      service: rollback
-    depends_on:
-      - tests-db
-    command: [ "-path", "/migrations", "-database", "${TESTS_DB_DSN}?sslmode=disable", "down", "1" ]
 
 volumes:
   db_data:
