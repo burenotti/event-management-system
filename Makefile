@@ -1,5 +1,5 @@
 generate-docs:
-	swagger init -g handler/handler.go
+	swag init -g handler/handler.go
 
 generate: generate-docs
 

@@ -4,13 +4,14 @@ tmp_dir = "tmp"
 
 [build]
 cmd = "go build -o ./tmp/main ./cmd/app/main.go"
+args_bin = ["--host", "0.0.0.0", "--port", "80"]
 delay = 200
 exclude_dir = ["assets", "tmp", "vendor", "testdata"]
 exclude_file = []
 exclude_regex = ["_test.go"]
 exclude_unchanged = false
 follow_symlink = false
-full_bin = "dlv --listen=:2345 --headless=true --accept-multiclient --api-version=2 exec ./tmp/main --host 0.0.0.0 --port 80"
+#full_bin = "dlv --listen=:2345 --headless=true --accept-multiclient --api-version=2 exec ./tmp/main -- --host 0.0.0.0 --port 80"
 include_dir = []
 include_ext = ["go", "tpl", "tmpl", "html"]
 include_file = []

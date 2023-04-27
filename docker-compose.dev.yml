@@ -1,6 +1,7 @@
 services:
   app:
-    build: 'Dockerfile.dev'
+    build:
+      dockerfile: 'Dockerfile.dev'
     expose:
       - 80
     ports:
@@ -10,6 +11,8 @@ services:
       - config/.env
     depends_on:
       - db
+    volumes:
+      - .:/app
     networks:
       - database
       - app
@@ -18,22 +21,22 @@ services:
     build:
       dockerfile: 'Dockerfile.docs'
     ports:
-      - 8000:80
+      - 8001:80
     networks:
       - app
 
-  tests:
-    build:
-      dockerfile: 'Dockerfile.tests'
-    ports:
-      - 2345:2345 # Remote debug port
-    env_file:
-      - config/.env.tests
-    networks:
-      - app
-      - tests-database
-    deploy:
-      replicas: 0
+#  tests:
+#    build:
+#      dockerfile: 'Dockerfile.tests'
+#    ports:
+#      - 2345:2345 # Remote debug port
+#    env_file:
+#      - config/.env.tests
+#    networks:
+#      - app
+#      - tests-database
+#    deploy:
+#      replicas: 0
 
   db:
     image: 'postgres:12-alpine3.15'
