@@ -1,0 +1,99 @@
+services:
+  app:
+    build: 'Dockerfile.dev'
+    expose:
+      - 80
+    ports:
+      - 8000:80
+      - 2345:2345 # Remote debug port
+    env_file:
+      - config/.env
+    depends_on:
+      - db
+    networks:
+      - database
+      - app
+
+  docs:
+    build:
+      dockerfile: 'Dockerfile.docs'
+    ports:
+      - 8000:80
+    networks:
+      - app
+
+  tests:
+    build:
+      dockerfile: 'Dockerfile.tests'
+    ports:
+      - 2345:2345 # Remote debug port
+    env_file:
+      - config/.env.tests
+    networks:
+      - app
+      - tests-database
+    deploy:
+      replicas: 0
+
+  db:
+    image: 'postgres:12-alpine3.15'
+    expose:
+      - 5423
+    ports:
+      - 5432:5432
+    env_file:
+      - config/.env.db
+    networks:
+      - database
+
+  migrate:
+    image: migrate/migrate:latest
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      - db
+    networks:
+      - database
+    command: [ "-path", "/migrations", "-database", "${DB_DSN}?sslmode=disable", "up" ]
+    deploy:
+      replicas: 0
+
+  rollback:
+    extends:
+      service: migrate
+    command: [ "-path", "/migrations", "-database", "${DB_DSN}?sslmode=disable", "down", "1" ]
+
+  tests-db:
+    extends:
+      service: db
+    networks:
+      - tests-database
+    deploy:
+      replicas: 0
+
+  migrate-tests:
+    extends:
+      service: migrate
+    depends_on:
+      - tests-db
+    networks:
+      - tests-database
+    command: [ "-path", "/migrations", "-database", "${TESTS_DB_DSN}?sslmode=disable", "up" ]
+
+  rollback-tests:
+    extends:
+      service: rollback
+    depends_on:
+      - tests-db
+    command: [ "-path", "/migrations", "-database", "${TESTS_DB_DSN}?sslmode=disable", "down", "1" ]
+
+volumes:
+  db_data:
+
+networks:
+  app:
+    driver: bridge
+  database:
+    driver: bridge
+  tests-database:
+    driver: bridge

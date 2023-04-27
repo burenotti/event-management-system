@@ -1,0 +1,14 @@
+basePath: /
+host: app:80
+info:
+  contact:
+    email: burenotti@gmail.com
+    name: Буренин Артём
+  description: Реализация тестового задания для RTUITLab.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: API системы управления городскими меропреятиями
+  version: 0.1.0
+paths: {}
+swagger: "2.0"

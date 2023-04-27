@@ -1,0 +1,10 @@
+FROM golang:1.19-alpine3.15
+
+ADD . /app
+WORKDIR /app
+RUN go mod download \
+    && go install github.com/swaggo/swag/cmd/swag@latest \
+    && go install github.com/cosmtrek/air@latest \
+    && go install github.com/go-delve/delve/cmd/dlv@latest
+
+CMD ["air"]
