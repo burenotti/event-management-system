@@ -40,7 +40,7 @@ func TestDatabase_WithContext_NoTx(t *testing.T) {
 	ctx := context.Background()
 	db := &sqlx.DB{}
 	database := NewDatabase(db)
-	actual, ok := database.WithContext(ctx).(*sqlx.DB)
+	actual, ok := database.withContext(ctx).(*sqlx.DB)
 	assert.True(t, ok)
 	assert.Equal(t, db, actual)
 }
@@ -51,7 +51,7 @@ func TestDatabase_WithContext(t *testing.T) {
 	ctx = injectTx(ctx, tx)
 	db := &sqlx.DB{}
 	database := NewDatabase(db)
-	actual, ok := database.WithContext(ctx).(*sqlx.Tx)
+	actual, ok := database.withContext(ctx).(*sqlx.Tx)
 	assert.True(t, ok)
 	assert.Equal(t, tx, actual)
 }

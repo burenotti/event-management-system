@@ -5,13 +5,26 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/leporo/sqlf"
 )
+
+func init() {
+	sqlf.SetDialect(sqlf.PostgreSQL)
+}
+
+type AtomicFunc func(ctx context.Context) error
 
 type DbContext interface {
 	sqlx.QueryerContext
 	sqlx.ExecerContext
 	sqlx.PreparerContext
 	SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+}
+
+type DatabaseWrapper interface {
+	DbContext
+	Atomic(ctx context.Context, f AtomicFunc) error
 }
 
 type txKey struct{}
@@ -32,21 +45,47 @@ type Database struct {
 	db *sqlx.DB
 }
 
+func (d *Database) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	return d.withContext(ctx).QueryContext(ctx, query, args...)
+}
+
+func (d *Database) QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
+	return d.withContext(ctx).QueryxContext(ctx, query, args...)
+}
+
+func (d *Database) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	return d.withContext(ctx).QueryRowContext(ctx, query, args...)
+}
+
+func (d *Database) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
+	return d.withContext(ctx).QueryRowxContext(ctx, query, args...)
+}
+
+func (d *Database) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return d.withContext(ctx).ExecContext(ctx, query, args...)
+}
+
+func (d *Database) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+	return d.withContext(ctx).PrepareContext(ctx, query)
+}
+
+func (d *Database) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+	return d.withContext(ctx).SelectContext(ctx, dest, query, args...)
+}
+
 func NewDatabase(db *sqlx.DB) *Database {
 	return &Database{
 		db: db,
 	}
 }
 
-func (d *Database) WithContext(ctx context.Context) DbContext {
+func (d *Database) withContext(ctx context.Context) DbContext {
 	if tx := extractTx(ctx); tx != nil {
 		return tx
 	} else {
 		return d.db
 	}
 }
-
-type AtomicFunc func(ctx context.Context) error
 
 func (d *Database) Atomic(ctx context.Context, f AtomicFunc) error {
 
