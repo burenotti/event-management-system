@@ -92,7 +92,7 @@ func (r *UserRepository) Update(ctx context.Context, userId int64, update map[st
 
 	for key, upd := range update {
 		if _, ok := fields[key]; !ok {
-			fmt.Errorf("%v: could not update field '%s'", ErrLogicError, upd)
+			return nil, fmt.Errorf("%v: could not update field '%s'", ErrLogicError, upd)
 		}
 		query = query.Set(key, upd)
 	}
