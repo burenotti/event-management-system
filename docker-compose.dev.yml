@@ -8,7 +8,7 @@ services:
       - 8000:80
       - 2345:2345 # Remote debug port
     env_file:
-      - config/.env
+      - .env
     depends_on:
       - db
     volumes:
@@ -32,7 +32,7 @@ services:
     ports:
       - 5432:5432
     env_file:
-      - config/.env.db
+      - .env.db
     networks:
       - database
 
@@ -53,15 +53,29 @@ services:
       service: migrate
     command: [ "-path", "/migrations", "-database", "${DB_DSN}?sslmode=disable", "down", "1" ]
 
+  test:
+    build:
+      dockerfile: 'Dockerfile.dev'
+    env_file:
+      - .env.tests
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    networks:
+      - tests-database
+    command: [ "./run-tests.sh" ]
+
   tests-db:
-    extends:
-      service: db
+    image: 'postgres:12-alpine3.15'
+    expose:
+      - 5432
+    ports:
+      - 15432:5432
     networks:
       - tests-database
     env_file:
-      - ./config/.env.tests
-    deploy:
-      replicas: 0
+      - .env.tests
 
 volumes:
   db_data:
