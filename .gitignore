@@ -1,7 +1,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/goland+iml,macos,windows,linux,dotenv
 # Edit at https://www.toptal.com/developers/gitignore?templates=goland+iml,macos,windows,linux,dotenv
 
-config/.env*
+.env*
+coverage.html
 tmp/
 build/
 ### GoLand+all ###

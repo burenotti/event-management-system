@@ -44,7 +44,7 @@ func (s *DBTestSuite) SetupSuite() {
 
 func DBTestSuiteFromEnv() *DBTestSuite {
 	return NewDBTestSuite(
-		os.Getenv("TEST_DB_DSN"),
+		os.Getenv("DB_DSN"),
 		os.Getenv("MIGRATE_DSN"),
 		os.Getenv("MIGRATE_DIR"),
 	)
