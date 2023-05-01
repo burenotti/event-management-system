@@ -7,8 +7,8 @@ test-native:
 	DB_DSN=$${DB_DSN} \
 	MIGRATE_DSN=$${MIGRATE_DSN} \
 	MIGRATE_DIR=$${MIGRATE_DIR} \
-	go test -v -json -count=1 -race -coverprofile=coverage.out ./...; \
-	go tool cover -html=coverage.out
+	go test -v -count=1 -race -coverprofile=coverage.out ./...; \
+	go tool cover -html=coverage.out -o coverage.html
 	rm coverage.out
 
 migrate:
