@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/burenotti/rtu-it-lab-recruit/model"
-	"github.com/jackc/pgconn"
 	"github.com/leporo/sqlf"
 )
 
@@ -213,13 +212,4 @@ func (r *OrganizationRepository) DeleteMember(ctx context.Context, orgId, userId
 		return ErrMemberNotFound
 	}
 	return nil
-}
-
-func getViolatedConstraint(err error) string {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		return pgErr.ConstraintName
-	} else {
-		return ""
-	}
 }
