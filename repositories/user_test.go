@@ -140,3 +140,20 @@ func (s *UserRepositoryTestSuite) TestDelete() {
 	err = repo.Delete(ctx, -1)
 	assert.ErrorAs(s.T(), err, &ErrUserNotFound, "should return right error")
 }
+
+func (s *UserRepositoryTestSuite) TestGetByEmail() {
+	ctx := context.Background()
+	repo := NewUserRepository(NewDatabase(s.db))
+	for i := 1; i < 5; i++ {
+		expected := CreateRandomUser(ctx, NewDatabase(s.db), s.T())
+		s.T().Run(expected.Email, func(t *testing.T) {
+			actual, err := repo.GetByEmail(ctx, expected.Email)
+			assert.NoError(s.T(), err, "should find user")
+			assert.Equal(s.T(), expected.UserID, actual.UserID)
+			assert.Equal(s.T(), expected.Email, actual.Email)
+			assert.Equal(s.T(), expected.FirstName, actual.FirstName)
+			assert.Equal(s.T(), expected.LastName, actual.LastName)
+			assert.Equal(s.T(), expected.MiddleName, actual.MiddleName)
+		})
+	}
+}

@@ -71,6 +71,27 @@ func (r *UserRepository) GetById(ctx context.Context, userId int64) (*model.User
 	return u, nil
 }
 
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+	u := &model.User{}
+	err := sqlf.From("users").
+		Select("user_id").To(&u.UserID).
+		Select("first_name").To(&u.FirstName).
+		Select("last_name").To(&u.LastName).
+		Select("middle_name").To(&u.MiddleName).
+		Select("is_active").To(&u.IsActive).
+		Select("email").To(&u.Email).
+		Where("email = ?", email).
+		QueryRow(ctx, r.db)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("%v: user with provided id does not exist", ErrUserNotFound)
+	} else if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
 func (r *UserRepository) Update(ctx context.Context, userId int64, update map[string]interface{}) (*model.User, error) {
 
 	// Set of columns, which could be updated
