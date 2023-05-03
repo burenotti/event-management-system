@@ -1,5 +1,62 @@
 basePath: /
-host: app:80
+definitions:
+  handler.HTTPError:
+    properties:
+      details:
+        type: string
+    type: object
+  model.AuthCredentials:
+    properties:
+      code:
+        example: "6666"
+        type: string
+      user_id:
+        example: 1
+        type: integer
+    type: object
+  model.CodeRequest:
+    properties:
+      email:
+        example: johndoe@example.com
+        type: string
+    type: object
+  model.UserCreate:
+    properties:
+      email:
+        example: johndoe@example.com
+        type: string
+      first_name:
+        example: John
+        type: string
+      last_name:
+        example: Doe
+        type: string
+      middle_name:
+        example: Jr.
+        type: string
+    type: object
+  model.UserGet:
+    properties:
+      email:
+        example: johndoe@example.com
+        type: string
+      first_name:
+        example: John
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      last_name:
+        example: Doe
+        type: string
+      middle_name:
+        example: Jr.
+        type: string
+      user_id:
+        example: 1
+        type: integer
+    type: object
+host: localhost:8000
 info:
   contact:
     email: burenotti@gmail.com
@@ -10,5 +67,125 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   title: API системы управления городскими меропреятиями
   version: 0.1.0
-paths: {}
+paths:
+  /auth/activate/{token}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Activation token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+      summary: Activates user with token sent in email
+      tags:
+      - Auth
+  /auth/request:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        In real API activate method should be POST, because it changes system state.
+        But in this case it was made GET to make possible activation by clicking on link in email message without any additional code.
+      parameters:
+      - description: Request data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CodeRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+      summary: Requests sending one time password to users email
+      tags:
+      - Auth
+  /auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.AuthCredentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+      summary: Signs user in using sent in email one time password
+      tags:
+      - Auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User info
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.UserGet'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+      summary: Creates new user that should be activated with email
+      tags:
+      - Auth
 swagger: "2.0"

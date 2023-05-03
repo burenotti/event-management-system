@@ -22,13 +22,278 @@ const docTemplate = `{
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {}
+    "paths": {
+        "/auth/activate/{token}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Activates user with token sent in email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Activation token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/request": {
+            "post": {
+                "description": "In real API activate method should be POST, because it changes system state.\nBut in this case it was made GET to make possible activation by clicking on link in email message without any additional code.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Requests sending one time password to users email",
+                "parameters": [
+                    {
+                        "description": "Request data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/sign-in": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Signs user in using sent in email one time password",
+                "parameters": [
+                    {
+                        "description": "Credentials",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AuthCredentials"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handler.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/handler.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/sign-up": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Creates new user that should be activated with email",
+                "parameters": [
+                    {
+                        "description": "User info",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UserCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.UserGet"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/handler.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.HTTPError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handler.HTTPError": {
+            "type": "object",
+            "properties": {
+                "details": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.AuthCredentials": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "6666"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "model.CodeRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "johndoe@example.com"
+                }
+            }
+        },
+        "model.UserCreate": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "johndoe@example.com"
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "middle_name": {
+                    "type": "string",
+                    "example": "Jr."
+                }
+            }
+        },
+        "model.UserGet": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "johndoe@example.com"
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "middle_name": {
+                    "type": "string",
+                    "example": "Jr."
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        }
+    }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "0.1.0",
-	Host:             "app:80",
+	Host:             "localhost:8000",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "API системы управления городскими меропреятиями",
