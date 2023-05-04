@@ -31,17 +31,18 @@ type OrganizationUpdate struct {
 }
 
 type OrganizationMemberCreate struct {
-	UserID int64            `json:"user_id"`
-	Can    MemberPrivileges `json:"privileges"`
+	UserID  int64        `json:"user_id"`
+	IsOwner bool         `json:"is_owner"`
+	Rights  MemberRights `json:"privileges"`
 }
 
 type OrganizationMember struct {
-	UserID int64            `json:"user_id"`
-	Can    MemberPrivileges `json:"privileges"`
+	UserID  int64        `json:"user_id"`
+	IsOwner bool         `json:"is_owner"`
+	Can     MemberRights `json:"privileges"`
 }
 
-type MemberPrivileges struct {
-	ViewEvents    bool `json:"view_events"`
+type MemberRights struct {
 	EditEvents    bool `json:"edit_events"`
 	ManageMembers bool `json:"manage_members"`
 }

@@ -152,9 +152,9 @@ func (s *OrganizationRepositoryTestSuite) TestAddMember() {
 	org := s.createTestOrg()
 	usr := s.createTestUser()
 	c := model.OrganizationMemberCreate{
-		UserID: usr.UserID,
-		Can: model.MemberPrivileges{
-			ViewEvents:    true,
+		UserID:  usr.UserID,
+		IsOwner: true,
+		Rights: model.MemberRights{
 			EditEvents:    false,
 			ManageMembers: true,
 		},
@@ -162,7 +162,7 @@ func (s *OrganizationRepositoryTestSuite) TestAddMember() {
 	mem, err := r.AddMember(ctx, org.OrganizationID, &c)
 	assert.NoError(s.T(), err, "should correctly create user")
 	assert.Equal(s.T(), usr.UserID, mem.UserID)
-	assert.Equal(s.T(), true, mem.Can.ViewEvents)
+	assert.Equal(s.T(), true, mem.IsOwner)
 	assert.Equal(s.T(), false, mem.Can.EditEvents)
 	assert.Equal(s.T(), true, mem.Can.ManageMembers)
 
@@ -190,17 +190,17 @@ func (s *OrganizationRepositoryTestSuite) TestListMember() {
 	usr := s.createTestUser()
 	usr2 := s.createTestUser()
 	c1 := model.OrganizationMemberCreate{
-		UserID: usr.UserID,
-		Can: model.MemberPrivileges{
-			ViewEvents:    true,
+		UserID:  usr.UserID,
+		IsOwner: true,
+		Rights: model.MemberRights{
 			EditEvents:    true,
 			ManageMembers: true,
 		},
 	}
 	c2 := model.OrganizationMemberCreate{
-		UserID: usr2.UserID,
-		Can: model.MemberPrivileges{
-			ViewEvents:    true,
+		UserID:  usr2.UserID,
+		IsOwner: false,
+		Rights: model.MemberRights{
 			EditEvents:    false,
 			ManageMembers: false,
 		},

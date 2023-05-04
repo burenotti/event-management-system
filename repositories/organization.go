@@ -122,9 +122,9 @@ func (r *OrganizationRepository) AddMember(ctx context.Context, orgId int64, mem
 	_, err := sqlf.InsertInto("organization_members").
 		Set("organization_id", orgId).
 		Set("user_id", mem.UserID).
-		Set("can_manage_members", mem.Can.ManageMembers).
-		Set("can_edit_events", mem.Can.EditEvents).
-		Set("can_view_events", mem.Can.ViewEvents).
+		Set("can_manage_members", mem.Rights.ManageMembers).
+		Set("can_edit_events", mem.Rights.EditEvents).
+		Set("is_owner", mem.IsOwner).
 		ExecAndClose(ctx, r.db)
 
 	if getViolatedConstraint(err) == MembersPkeyName {
@@ -138,8 +138,9 @@ func (r *OrganizationRepository) AddMember(ctx context.Context, orgId int64, mem
 	}
 
 	return &model.OrganizationMember{
-		UserID: mem.UserID,
-		Can:    mem.Can,
+		UserID:  mem.UserID,
+		Can:     mem.Rights,
+		IsOwner: mem.IsOwner,
 	}, nil
 }
 
@@ -148,10 +149,10 @@ func (r *OrganizationRepository) ListMembers(ctx context.Context, orgId int64) (
 	var scanErr error
 	err := sqlf.From("organization_members").
 		Where("organization_id = ?", orgId).
-		Select("user_id, can_manage_members, can_edit_events, can_view_events").
+		Select("user_id, can_manage_members, can_edit_events, is_owner").
 		QueryAndClose(ctx, r.db, func(rows *sql.Rows) {
 			m := model.OrganizationMember{}
-			err := rows.Scan(&m.UserID, &m.Can.ManageMembers, &m.Can.EditEvents, &m.Can.ViewEvents)
+			err := rows.Scan(&m.UserID, &m.Can.ManageMembers, &m.Can.EditEvents, &m.IsOwner)
 			if errors.Is(err, sql.ErrNoRows) {
 				scanErr = ErrOrganizationNotFound
 			} else if err != nil {
@@ -170,10 +171,9 @@ func (r *OrganizationRepository) ListMembers(ctx context.Context, orgId int64) (
 	return members, nil
 }
 
-func (r *OrganizationRepository) SetMemberRights(ctx context.Context, orgId, userId int64, newRights model.MemberPrivileges) (*model.OrganizationMember, error) {
+func (r *OrganizationRepository) SetMemberRights(ctx context.Context, orgId, userId int64, newRights model.MemberRights) (*model.OrganizationMember, error) {
 	res, err := sqlf.Update("organization_members").
 		Where("organizationId = ? AND user_id = ?", orgId, userId).
-		Set("can_view_events", newRights.ViewEvents).
 		Set("can_edit_events", newRights.EditEvents).
 		Set("can_manage_members", newRights.ManageMembers).
 		Exec(ctx, r.db)
