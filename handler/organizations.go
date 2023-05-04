@@ -1,6 +1,11 @@
 package handler
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/burenotti/rtu-it-lab-recruit/model"
+	"github.com/gofiber/fiber/v2"
+)
+
+var ErrTokenIsNotProvided = (&HTTPError{Details: "token is not provided"}).AsFiberError(401)
 
 // CreateOrganization
 //
@@ -16,7 +21,27 @@ import "github.com/gofiber/fiber/v2"
 //	@Failure	422		{object}	ValidationError
 //	@Router		/organization/ [post]
 func (h *HTTPHandler) CreateOrganization(ctx *fiber.Ctx) error {
-	return (&HTTPError{Details: "NotImplemented"}).AsFiberError(501)
+
+	org, jerr := JsonParseAndValidate[model.OrganizationCreate](ctx, validate)
+	if jerr != nil {
+		return jerr.AsFiberError(422)
+	}
+	var tokenString string
+	if tokenString = GetToken(ctx); tokenString == "" {
+		return ErrTokenIsNotProvided
+	}
+
+	user, err := h.ucase.ValidateToken(ctx.Context(), tokenString)
+	if err != nil {
+		return NewHTTPError(err.Error()).AsFiberError(400)
+	}
+
+	createdOrg, err := h.ucase.CreateOrganization(ctx.Context(), user.UserID, org)
+	if err != nil {
+		return NewHTTPError(err.Error()).AsFiberError(400)
+	}
+	ctx.Status(201)
+	return ReturnJson(ctx, createdOrg)
 }
 
 // GetOrganization

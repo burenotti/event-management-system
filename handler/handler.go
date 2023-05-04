@@ -2,8 +2,10 @@ package handler
 
 import (
 	_ "github.com/burenotti/rtu-it-lab-recruit/docs"
+	"github.com/burenotti/rtu-it-lab-recruit/services"
 	"github.com/burenotti/rtu-it-lab-recruit/usecases"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/swagger"
 	"github.com/valyala/fasthttp"
@@ -11,19 +13,19 @@ import (
 
 // HTTPHandler
 //
-//	@title						API системы управления городскими меропреятиями
-//	@version					0.1.0
-//	@description				Реализация тестового задания для RTUITLab.
-//	@contact.name				Буренин Артём
-//	@contact.email				burenotti@gmail.com
-//	@license.name				Apache 2.0
-//	@license.url				http://www.apache.org/licenses/LICENSE-2.0.html
-//	@host						localhost:8000
-//	@BasePath					/
-//	@securitydefinitions.apikey	APIKey
-//	@name						APIKey
-//	@in							header
-//	@description				OAuth protects our entity endpoints
+//	@title									API системы управления городскими меропреятиями
+//	@version								0.1.0
+//	@description							Реализация тестового задания для RTUITLab.
+//	@contact.name							Буренин Артём
+//	@contact.email							burenotti@gmail.com
+//	@license.name							Apache 2.0
+//	@license.url							http://www.apache.org/licenses/LICENSE-2.0.html
+//	@host									localhost:8000
+//	@BasePath								/
+//
+//	@securitydefinitions.oauth2.password	APIKey
+//	@tokenUrl								/auth/sign-in
+//	@description							OAuth protects our entity endpoints
 type HTTPHandler struct {
 	app   *fiber.App
 	ucase UseCases
@@ -34,15 +36,18 @@ type Config struct {
 }
 
 type UseCases struct {
+	services.AuthService
 	usecases.EmailSignInUseCase
 	usecases.SignUpUseCase
+	usecases.OrganizationUseCase
 }
 
 func New(ucase UseCases, config *Config) *HTTPHandler {
 	app := fiber.New(fiber.Config{
 		AppName: config.Name,
 	})
-	app.Use(recover.New())
+	app.Use(logger.New())
+	app.Use(recover.New(recover.Config{}))
 	handler := &HTTPHandler{
 		ucase: ucase,
 		app:   app,

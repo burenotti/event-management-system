@@ -3,8 +3,8 @@ package model
 import "github.com/golang-jwt/jwt/v5"
 
 type AuthCredentials struct {
-	Email string `json:"user_id" example:"johndoe@example.com"`
-	Code  string `json:"code" example:"6666"`
+	Email string `json:"username" form:"username" validate:"required,email" example:"johndoe@example.com"`
+	Code  string `json:"password" form:"password" validate:"required,numeric" example:"6666"`
 }
 
 type AuthTokenClaims struct {
