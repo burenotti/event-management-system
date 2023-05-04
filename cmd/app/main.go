@@ -123,9 +123,11 @@ func main() {
 	}
 	dialer := gomail.NewDialer(cfg.SmtpHost, cfg.SmtpPort, cfg.SmtpUser, cfg.SmtpPassword)
 	dialer.SSL = true
-	delivery := &services.MailingService{
-		Dialer: dialer,
-	}
+	//delivery := &services.MailingService{
+	//	Dialer: dialer,
+	//}
+
+	delivery := &services.ConsoleDelivery{Logger: logger}
 
 	auth := &services.AuthService{
 		TokenTTL:   cfg.ActivationTokenTTL,
@@ -136,6 +138,8 @@ func main() {
 		PrivateKey: cfg.PrivateKey,
 		TokenTTL:   cfg.ActivationTokenTTL,
 	}
+
+	orgRepo := repositories.NewOrganizationRepository(db)
 
 	ucase := handler.UseCases{
 		EmailSignInUseCase: usecases.EmailSignInUseCase{
@@ -149,6 +153,15 @@ func main() {
 			UserRepo:       userStore,
 			ActivationRepo: activationRepo,
 			Delivery:       delivery,
+			Logger:         logger,
+		},
+		OrganizationUseCase: usecases.OrganizationUseCase{
+			Transactioner:       db,
+			OrganizationStorage: orgRepo,
+		},
+		AuthService: services.AuthService{
+			TokenTTL:   cfg.AuthTokenTTL,
+			PrivateKey: cfg.PrivateKey,
 		},
 	}
 	http := handler.New(ucase, cfg.HandlerConfig())
