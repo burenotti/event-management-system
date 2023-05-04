@@ -108,7 +108,7 @@ const docTemplate = `{
         "/auth/sign-in": {
             "post": {
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -119,13 +119,18 @@ const docTemplate = `{
                 "summary": "Signs user in using sent in email one time password",
                 "parameters": [
                     {
-                        "description": "Credentials",
-                        "name": "credentials",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.AuthCredentials"
-                        }
+                        "type": "string",
+                        "description": "Email",
+                        "name": "username",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "One time code",
+                        "name": "password",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -770,19 +775,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.AuthCredentials": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "example": "6666"
-                },
-                "user_id": {
-                    "type": "string",
-                    "example": "johndoe@example.com"
-                }
-            }
-        },
         "model.CodeRequest": {
             "type": "object",
             "properties": {
@@ -963,9 +955,9 @@ const docTemplate = `{
     "securityDefinitions": {
         "APIKey": {
             "description": "OAuth protects our entity endpoints",
-            "type": "apiKey",
-            "name": "APIKey",
-            "in": "header"
+            "type": "oauth2",
+            "flow": "password",
+            "tokenUrl": "/auth/sign-in"
         }
     }
 }`
