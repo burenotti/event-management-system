@@ -65,7 +65,6 @@ const docTemplate = `{
         },
         "/auth/request": {
             "post": {
-                "description": "In real API activate method should be POST, because it changes system state.\nBut in this case it was made GET to make possible activation by clicking on link in email message without any additional code.",
                 "consumes": [
                     "application/json"
                 ],
@@ -121,7 +120,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Credentials",
-                        "name": "request",
+                        "name": "credentials",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -223,8 +222,8 @@ const docTemplate = `{
                     "example": "6666"
                 },
                 "user_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "johndoe@example.com"
                 }
             }
         },

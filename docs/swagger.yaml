@@ -11,8 +11,8 @@ definitions:
         example: "6666"
         type: string
       user_id:
-        example: 1
-        type: integer
+        example: johndoe@example.com
+        type: string
     type: object
   model.CodeRequest:
     properties:
@@ -98,9 +98,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: |-
-        In real API activate method should be POST, because it changes system state.
-        But in this case it was made GET to make possible activation by clicking on link in email message without any additional code.
       parameters:
       - description: Request data
         in: body
@@ -131,7 +128,7 @@ paths:
       parameters:
       - description: Credentials
         in: body
-        name: request
+        name: credentials
         required: true
         schema:
           $ref: '#/definitions/model.AuthCredentials'

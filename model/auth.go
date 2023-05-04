@@ -3,8 +3,8 @@ package model
 import "github.com/golang-jwt/jwt/v5"
 
 type AuthCredentials struct {
-	UserId int64  `json:"user_id" example:"1"`
-	Code   string `json:"code" example:"6666"`
+	Email string `json:"user_id" example:"johndoe@example.com"`
+	Code  string `json:"code" example:"6666"`
 }
 
 type AuthTokenClaims struct {
@@ -24,4 +24,16 @@ type AuthPayload struct {
 
 type CodeRequest struct {
 	Email string `json:"email" example:"johndoe@example.com"`
+}
+
+type Token struct {
+	Type        string `json:"type"`
+	AccessToken string `json:"access_token"`
+}
+
+func NewAccessToken(token string) *Token {
+	return &Token{
+		Type:        "Bearer",
+		AccessToken: token,
+	}
 }

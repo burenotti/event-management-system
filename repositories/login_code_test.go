@@ -22,7 +22,7 @@ func TestLoginCodeRepositoryTestSuite(t *testing.T) {
 func (s *LoginCodeRepositoryTestSuite) TestCreate() {
 	ctx := context.Background()
 	repo := LoginCodeRepository{
-		db:      NewDatabase(s.db),
+		Db:      NewDatabase(s.db),
 		CodeTTL: 24 * time.Hour,
 	}
 	user := CreateRandomUser(ctx, NewDatabase(s.db), s.T())
@@ -45,7 +45,7 @@ func (s *LoginCodeRepositoryTestSuite) TestCreate() {
 func (s *LoginCodeRepositoryTestSuite) TestMarkCodeUsed() {
 	ctx := context.Background()
 	repo := LoginCodeRepository{
-		db:      NewDatabase(s.db),
+		Db:      NewDatabase(s.db),
 		CodeTTL: 24 * time.Hour,
 	}
 

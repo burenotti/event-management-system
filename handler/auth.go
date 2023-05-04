@@ -1,6 +1,12 @@
 package handler
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/burenotti/rtu-it-lab-recruit/model"
+	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2"
+)
+
+var validate = validator.New()
 
 // SignUp
 //
@@ -15,8 +21,18 @@ import "github.com/gofiber/fiber/v2"
 //	@Failure	400		{object}	HTTPError
 //	@Router		/auth/sign-up [post]
 func (h *HTTPHandler) SignUp(ctx *fiber.Ctx) error {
-	panic("Unimplemented")
 
+	u, jerr := JsonParseAndValidate[model.UserCreate](validate, ctx.Body())
+	if jerr != nil {
+		return jerr.AsFiberError(fiber.StatusUnprocessableEntity)
+	}
+	user, err := h.ucase.SignUp(ctx.Context(), u)
+
+	if err != nil {
+		return NewHTTPError(err.Error()).AsFiberError(fiber.StatusBadRequest)
+	}
+
+	return ReturnJson(ctx, user)
 }
 
 // ActivateWithToken
@@ -33,26 +49,40 @@ func (h *HTTPHandler) SignUp(ctx *fiber.Ctx) error {
 //	@Failure	400	{object}	HTTPError
 //	@Router		/auth/activate/{token} [get]
 func (h *HTTPHandler) ActivateWithToken(ctx *fiber.Ctx) error {
-	panic("Unimplemented")
+	token := ctx.Params("token")
+	if token == "" {
+		return NewHTTPError("token is required path parameter").AsFiberError(400)
+	}
+	if err := h.ucase.ActivateWithToken(ctx.Context(), token); err != nil {
+		return NewHTTPError(err.Error()).AsFiberError(400)
+	}
+	ctx.Status(204)
+	return nil
 }
 
 // RequestEmailCode
 //
-//	@Tags			Auth
-//	@Summary		Requests sending one time password to users email
-//	@Description	In real API activate method should be POST, because it changes system state.
-//	@Description	But in this case it was made GET to make possible activation by clicking on link in email message without any additional code.
-//	@Accept			json
-//	@Produce		json
+//	@Tags		Auth
+//	@Summary	Requests sending one time password to users email
+//	@Accept		json
+//	@Produce	json
 //
-//	@Param			request	body	model.CodeRequest	true	"Request data"
+//	@Param		request	body	model.CodeRequest	true	"Request data"
 //
-//	@Success		204
-//	@Failure		500	{object}	HTTPError
-//	@Failure		400	{object}	HTTPError
-//	@Router			/auth/request [post]
+//	@Success	204
+//	@Failure	500	{object}	HTTPError
+//	@Failure	400	{object}	HTTPError
+//	@Router		/auth/request [post]
 func (h *HTTPHandler) RequestEmailCode(ctx *fiber.Ctx) error {
-	panic("Unimplemented")
+	req, jerr := JsonParseAndValidate[model.CodeRequest](validate, ctx.Body())
+	if jerr != nil {
+		return jerr.AsFiberError(422)
+	}
+
+	if err := h.ucase.RequestCode(ctx.Context(), req.Email); err != nil {
+		return NewHTTPError(err.Error()).AsFiberError(400)
+	}
+	return nil
 }
 
 // SignIn
@@ -62,7 +92,7 @@ func (h *HTTPHandler) RequestEmailCode(ctx *fiber.Ctx) error {
 //	@Accept		json
 //	@Produce	json
 //
-//	@Param		request	body	model.AuthCredentials	true	"Credentials"
+//	@Param		credentials	body	model.AuthCredentials	true	"Credentials"
 //
 //	@Success	200
 //	@Failure	500	{object}	HTTPError
@@ -70,5 +100,15 @@ func (h *HTTPHandler) RequestEmailCode(ctx *fiber.Ctx) error {
 //	@Failure	401	{object}	HTTPError
 //	@Router		/auth/sign-in [post]
 func (h *HTTPHandler) SignIn(ctx *fiber.Ctx) error {
-	panic("Unimplemented")
+	req, jerr := JsonParseAndValidate[model.AuthCredentials](validate, ctx.Body())
+	if jerr != nil {
+		return jerr.AsFiberError(422)
+	}
+	token, err := h.ucase.SignIn(ctx.Context(), req)
+
+	if err != nil {
+		return NewHTTPError(err.Error()).AsFiberError(400)
+	}
+
+	return ReturnJson(ctx, model.NewAccessToken(token))
 }

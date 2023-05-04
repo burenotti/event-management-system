@@ -1,6 +1,6 @@
 # Created by https://www.toptal.com/developers/gitignore/api/goland+iml,macos,windows,linux,dotenv
 # Edit at https://www.toptal.com/developers/gitignore?templates=goland+iml,macos,windows,linux,dotenv
-
+**/*.pem
 .env*
 coverage.html
 tmp/

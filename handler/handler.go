@@ -2,7 +2,9 @@ package handler
 
 import (
 	_ "github.com/burenotti/rtu-it-lab-recruit/docs"
+	"github.com/burenotti/rtu-it-lab-recruit/usecases"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/swagger"
 	"github.com/valyala/fasthttp"
 )
@@ -19,20 +21,30 @@ import (
 //	@host			localhost:8000
 //	@BasePath		/
 type HTTPHandler struct {
-	app *fiber.App
+	app   *fiber.App
+	ucase UseCases
 }
 
 type Config struct {
 	Name string
 }
 
-func New(config *Config) fasthttp.RequestHandler {
-	handler := &HTTPHandler{}
-	handler.app = fiber.New(fiber.Config{
+type UseCases struct {
+	usecases.EmailSignInUseCase
+	usecases.SignUpUseCase
+}
+
+func New(ucase UseCases, config *Config) *HTTPHandler {
+	app := fiber.New(fiber.Config{
 		AppName: config.Name,
 	})
+	app.Use(recover.New())
+	handler := &HTTPHandler{
+		ucase: ucase,
+		app:   app,
+	}
 	handler.Mount()
-	return handler.app.Handler()
+	return handler
 }
 
 func (h *HTTPHandler) Mount() {
@@ -44,4 +56,8 @@ func (h *HTTPHandler) Mount() {
 		auth.Post("/request", h.RequestEmailCode)
 		auth.Post("/sign-in", h.SignIn)
 	}
+}
+
+func (h *HTTPHandler) Handler() fasthttp.RequestHandler {
+	return h.app.Handler()
 }

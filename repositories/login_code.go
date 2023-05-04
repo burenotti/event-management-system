@@ -15,7 +15,7 @@ var (
 )
 
 type LoginCodeRepository struct {
-	db      DatabaseWrapper
+	Db      DatabaseWrapper
 	CodeTTL time.Duration
 }
 
@@ -32,7 +32,7 @@ func (r *LoginCodeRepository) CreateLoginCode(ctx context.Context, userId int64,
 		Set("code", code).
 		Set("is_used", false).
 		Set("expires_at", time.Now().UTC().Add(r.CodeTTL)).
-		ExecAndClose(ctx, r.db)
+		ExecAndClose(ctx, r.Db)
 
 	return err
 }
@@ -44,7 +44,7 @@ func (r *LoginCodeRepository) MarkCodeUsed(ctx context.Context, userId int64, co
 		Where("is_used = false").
 		Where("now() < expires_at").
 		Set("is_used", true).
-		ExecAndClose(ctx, r.db)
+		ExecAndClose(ctx, r.Db)
 
 	if err != nil {
 		return err

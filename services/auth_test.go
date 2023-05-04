@@ -21,7 +21,7 @@ func TestAuthService_CreateToken(t *testing.T) {
 
 	s := AuthService{
 		TokenTTL:   24 * time.Hour,
-		privateKey: key,
+		PrivateKey: key,
 	}
 	ctx := context.Background()
 	for i := 1; i <= 5; i++ {
@@ -51,7 +51,7 @@ func TestAuthService_ValidateToken(t *testing.T) {
 
 	s := AuthService{
 		TokenTTL:   24 * time.Hour,
-		privateKey: key,
+		PrivateKey: key,
 	}
 	ctx := context.Background()
 	for i := 1; i <= 5; i++ {

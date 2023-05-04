@@ -17,7 +17,7 @@ var (
 
 type AuthService struct {
 	TokenTTL   time.Duration
-	privateKey *rsa.PrivateKey
+	PrivateKey *rsa.PrivateKey
 }
 
 func (s *AuthService) CreateToken(_ context.Context, user *model.User) (string, error) {
@@ -36,13 +36,13 @@ func (s *AuthService) CreateToken(_ context.Context, user *model.User) (string, 
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 	}
-	token, err := jwt.NewWithClaims(jwt.SigningMethodRS256, claims).SignedString(s.privateKey)
+	token, err := jwt.NewWithClaims(jwt.SigningMethodRS256, claims).SignedString(s.PrivateKey)
 	return token, err
 }
 
 func (s *AuthService) ValidateToken(_ context.Context, tokenString string) (*model.AuthPayload, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return &s.privateKey.PublicKey, nil
+		return &s.PrivateKey.PublicKey, nil
 	})
 	payload := &model.AuthPayload{}
 	claims, _ := token.Claims.(jwt.MapClaims)
