@@ -8,6 +8,6 @@ CREATE TABLE login_code
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
-CREATE UNIQUE INDEX idx_login_code ON login_code (user_id, code);
+CREATE INDEX idx_login_code ON login_code (user_id, code);
 
 COMMIT;
