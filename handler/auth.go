@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/burenotti/rtu-it-lab-recruit/model"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -22,7 +23,7 @@ var validate = validator.New()
 //	@Router		/auth/sign-up [post]
 func (h *HTTPHandler) SignUp(ctx *fiber.Ctx) error {
 
-	u, jerr := JsonParseAndValidate[model.UserCreate](validate, ctx.Body())
+	u, jerr := JsonParseAndValidate[model.UserCreate](ctx, validate)
 	if jerr != nil {
 		return jerr.AsFiberError(fiber.StatusUnprocessableEntity)
 	}
@@ -74,7 +75,7 @@ func (h *HTTPHandler) ActivateWithToken(ctx *fiber.Ctx) error {
 //	@Failure	400	{object}	HTTPError
 //	@Router		/auth/request [post]
 func (h *HTTPHandler) RequestEmailCode(ctx *fiber.Ctx) error {
-	req, jerr := JsonParseAndValidate[model.CodeRequest](validate, ctx.Body())
+	req, jerr := JsonParseAndValidate[model.CodeRequest](ctx, validate)
 	if jerr != nil {
 		return jerr.AsFiberError(422)
 	}
@@ -89,10 +90,11 @@ func (h *HTTPHandler) RequestEmailCode(ctx *fiber.Ctx) error {
 //
 //	@Tags		Auth
 //	@Summary	Signs user in using sent in email one time password
-//	@Accept		json
+//	@Accept		x-www-form-urlencoded
 //	@Produce	json
 //
-//	@Param		credentials	body	model.AuthCredentials	true	"Credentials"
+//	@Param		username	query	string	true	"Email"
+//	@Param		password	query	string	true	"One time code"
 //
 //	@Success	200
 //	@Failure	500	{object}	HTTPError
@@ -100,7 +102,9 @@ func (h *HTTPHandler) RequestEmailCode(ctx *fiber.Ctx) error {
 //	@Failure	401	{object}	HTTPError
 //	@Router		/auth/sign-in [post]
 func (h *HTTPHandler) SignIn(ctx *fiber.Ctx) error {
-	req, jerr := JsonParseAndValidate[model.AuthCredentials](validate, ctx.Body())
+	fmt.Println(ctx.Get("Content-Type"))
+	req, jerr := JsonParseAndValidate[model.AuthCredentials](ctx, validate)
+	//fmt.Println(req.Email)
 	if jerr != nil {
 		return jerr.AsFiberError(422)
 	}

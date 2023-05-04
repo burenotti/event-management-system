@@ -1,25 +1,27 @@
 package handler
 
 import (
-	"encoding/json"
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"strings"
 )
 
-func JsonParseAndValidate[T any](validate *validator.Validate, body []byte) (*T, JsonError) {
+func JsonParseAndValidate[T any](ctx *fiber.Ctx, validate *validator.Validate) (*T, JsonError) {
 	obj := new(T)
-	if err := json.Unmarshal(body, obj); err != nil {
-		return nil, &HTTPError{Details: "Cannot parse json object"}
+	if err := ctx.BodyParser(obj); err != nil {
+		return nil, &HTTPError{Details: err.Error()}
 	}
+	fmt.Println(obj)
 	err := validate.Struct(obj)
 	if err != nil {
-		verr := err.(*validator.ValidationErrors)
+		verr := err.(validator.ValidationErrors)
 		validationError := &ValidationError{
 			Fields: nil,
 		}
-		for _, e := range *verr {
+		for _, e := range verr {
 			fieldErr := FieldValidationError{
-				Name:  e.StructField(),
+				Name:  e.Field(),
 				Error: e.Error(),
 			}
 			validationError.Fields = append(validationError.Fields, fieldErr)
@@ -34,4 +36,13 @@ func ReturnJson(ctx *fiber.Ctx, obj interface{}) error {
 		return NewHTTPError(err.Error()).AsFiberError(fiber.StatusInternalServerError)
 	}
 	return nil
+}
+
+func GetToken(ctx *fiber.Ctx) string {
+	header := ctx.Get("Authorization")
+	parts := strings.Split(header, " ")
+	if len(parts) != 2 {
+		return ""
+	}
+	return parts[1]
 }
