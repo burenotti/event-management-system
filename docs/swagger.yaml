@@ -1,9 +1,23 @@
 basePath: /
 definitions:
+  handler.FieldValidationError:
+    properties:
+      error:
+        type: string
+      name:
+        type: string
+    type: object
   handler.HTTPError:
     properties:
       details:
         type: string
+    type: object
+  handler.ValidationError:
+    properties:
+      fields:
+        items:
+          $ref: '#/definitions/handler.FieldValidationError'
+        type: array
     type: object
   model.AuthCredentials:
     properties:
@@ -18,6 +32,90 @@ definitions:
     properties:
       email:
         example: johndoe@example.com
+        type: string
+    type: object
+  model.InviteCreate:
+    properties:
+      from_user:
+        example: 1
+        type: integer
+      to_organization:
+        example: 1
+        type: integer
+      user_email:
+        example: johndoe@example.com
+        type: string
+    type: object
+  model.InviteGet:
+    properties:
+      from_user:
+        example: 1
+        type: integer
+      invite_id:
+        example: 1
+        type: integer
+      status:
+        enum:
+        - sent
+        - accepted
+        - rejected
+        type: string
+      to_organization:
+        example: 1
+        type: integer
+      user_email:
+        example: johndoe@example.com
+        type: string
+      user_id:
+        example: 2
+        type: integer
+    type: object
+  model.OrganizationCreate:
+    properties:
+      address:
+        example: Г. Москва, Пр-т. Вернадского 78
+        type: string
+      contact_email:
+        example: contact@mirea.ru
+        type: string
+      contact_phone:
+        example: "74992156565"
+        type: string
+      name:
+        example: Российский технологический университет МИРЭА
+        type: string
+    type: object
+  model.OrganizationGet:
+    properties:
+      address:
+        example: Г. Москва, Пр-т. Вернадского 78
+        type: string
+      contact_email:
+        example: contact@mirea.ru
+        type: string
+      contact_phone:
+        example: "74992156565"
+        type: string
+      name:
+        example: Российский технологический университет МИРЭА
+        type: string
+      organization_id:
+        example: 1
+        type: integer
+    type: object
+  model.OrganizationUpdate:
+    properties:
+      address:
+        example: Г. Москва, Пр-т. Вернадского 78
+        type: string
+      contact_email:
+        example: contact@mirea.ru
+        type: string
+      contact_phone:
+        example: "74992156565"
+        type: string
+      name:
+        example: Российский технологический университет МИРЭА
         type: string
     type: object
   model.UserCreate:
@@ -185,4 +283,348 @@ paths:
       summary: Creates new user that should be activated with email
       tags:
       - Auth
+  /organization/:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Organization Info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.OrganizationCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.OrganizationGet'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+      security:
+      - APIKey: []
+      summary: Creates a new organization
+      tags:
+      - Organizations
+  /organization/{organization_id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Organization id
+        in: path
+        name: organization_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+      security:
+      - APIKey: []
+      summary: Deletes organization by id
+      tags:
+      - Organizations
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Organization id
+        in: path
+        name: organization_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.OrganizationGet'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+      security:
+      - APIKey: []
+      summary: Returns an information about organization
+      tags:
+      - Organizations
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Organization id
+        in: path
+        name: organization_id
+        required: true
+        type: integer
+      - description: Fields that will be updated
+        in: body
+        name: updates
+        required: true
+        schema:
+          $ref: '#/definitions/model.OrganizationUpdate'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ValidationError'
+      security:
+      - APIKey: []
+      summary: Updates organization information
+      tags:
+      - Organizations
+  /organization/{organization_id}/invite/:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Invite id
+        in: path
+        name: organization_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/model.InviteGet'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+      security:
+      - APIKey: []
+      summary: Returns list of invites to organization
+      tags:
+      - Invites
+  /organization/{organization_id}/invite/{invite_id}/accept:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Invite id
+        in: path
+        name: invite_id
+        required: true
+        type: integer
+      - description: Organization id
+        in: path
+        name: organization_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+      security:
+      - APIKey: []
+      summary: Current user accepts invite and joins organization
+      tags:
+      - Invites
+  /organization/{organization_id}/invite/{invite_id}/reject:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Invite id
+        in: path
+        name: invite_id
+        required: true
+        type: integer
+      - description: Organization id
+        in: path
+        name: organization_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+      security:
+      - APIKey: []
+      summary: Current user rejects invite and joins organization
+      tags:
+      - Invites
+  /organization/{organization_id}/leave:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Invite id
+        in: path
+        name: organization_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+      security:
+      - APIKey: []
+      summary: Current user leaves organization
+      tags:
+      - Members
+  /organization/{organization_id}/member/{member_id}/:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Member id
+        in: path
+        name: member_id
+        required: true
+        type: integer
+      - description: Organization id
+        in: path
+        name: organization_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+      security:
+      - APIKey: []
+      summary: Removes member from organization
+      tags:
+      - Members
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Member id
+        in: path
+        name: member_id
+        required: true
+        type: integer
+      - description: Organization id
+        in: path
+        name: organization_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.ValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.HTTPError'
+      security:
+      - APIKey: []
+      summary: Updates organization member's privileges
+      tags:
+      - Members
+securityDefinitions:
+  APIKey:
+    description: OAuth protects our entity endpoints
+    in: header
+    name: APIKey
+    type: apiKey
 swagger: "2.0"

@@ -36,11 +36,10 @@ func (s *OrganizationRepositoryTestSuite) TestCreate() {
 	phone := "71111111111"
 	name := "My organization"
 	expectedOrg := model.OrganizationCreate{
-		OrganizationID: 0,
-		Name:           name,
-		Address:        &addr,
-		ContactEmail:   &email,
-		ContactPhone:   &phone,
+		Name:         name,
+		Address:      &addr,
+		ContactEmail: &email,
+		ContactPhone: &phone,
 	}
 	org, err := r.Create(ctx, &expectedOrg)
 	assert.NoError(s.T(), err, "should create user without errors")

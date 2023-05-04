@@ -11,15 +11,19 @@ import (
 
 // HTTPHandler
 //
-//	@title			API системы управления городскими меропреятиями
-//	@version		0.1.0
-//	@description	Реализация тестового задания для RTUITLab.
-//	@contact.name	Буренин Артём
-//	@contact.email	burenotti@gmail.com
-//	@license.name	Apache 2.0
-//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
-//	@host			localhost:8000
-//	@BasePath		/
+//	@title						API системы управления городскими меропреятиями
+//	@version					0.1.0
+//	@description				Реализация тестового задания для RTUITLab.
+//	@contact.name				Буренин Артём
+//	@contact.email				burenotti@gmail.com
+//	@license.name				Apache 2.0
+//	@license.url				http://www.apache.org/licenses/LICENSE-2.0.html
+//	@host						localhost:8000
+//	@BasePath					/
+//	@securitydefinitions.apikey	APIKey
+//	@name						APIKey
+//	@in							header
+//	@description				OAuth protects our entity endpoints
 type HTTPHandler struct {
 	app   *fiber.App
 	ucase UseCases
@@ -55,6 +59,21 @@ func (h *HTTPHandler) Mount() {
 		auth.Get("/activate/:token", h.ActivateWithToken)
 		auth.Post("/request", h.RequestEmailCode)
 		auth.Post("/sign-in", h.SignIn)
+	}
+
+	organizations := h.app.Group("/organization")
+	{
+		organizations.Post("/", h.CreateOrganization)
+		organizations.Get("/:organization_id", h.GetOrganization)
+		organizations.Patch("/:organization_id", h.UpdateOrganization)
+		organizations.Delete("/:organization_id", h.DeleteOrganization)
+	}
+	invites := h.app.Group("/organization/:organization_id/invite")
+	{
+		invites.Post("/", h.InviteToOrganization)
+		invites.Get("/", h.ListInvites)
+		invites.Post("/:invite_id/accept", h.AcceptInvite)
+		invites.Post("/:invite_id/reject", h.RejectInvite)
 	}
 }
 
