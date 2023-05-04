@@ -14,6 +14,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"gopkg.in/gomail.v2"
 	"os"
 	"os/signal"
 	"syscall"
@@ -25,6 +26,10 @@ type Config struct {
 	Port               string
 	AppName            string
 	DbDsn              string
+	SmtpHost           string
+	SmtpPort           int
+	SmtpUser           string
+	SmtpPassword       string
 	LoginCodeTTL       time.Duration
 	AuthTokenTTL       time.Duration
 	ActivationTokenTTL time.Duration
@@ -56,6 +61,10 @@ func ParseConfig() *Config {
 		LoginCodeTTL:       viper.GetDuration("LOGIN_CODE_TTL"),
 		AuthTokenTTL:       viper.GetDuration("AUTH_TOKEN_TTL"),
 		ActivationTokenTTL: viper.GetDuration("ACTIVATION_TOKEN_TTL"),
+		SmtpHost:           viper.GetString("SMTP_HOST"),
+		SmtpUser:           viper.GetString("SMTP_USER"),
+		SmtpPort:           viper.GetInt("SMTP_PORT"),
+		SmtpPassword:       viper.GetString("SMTP_PASSWORD"),
 		PrivateKey:         privateKey,
 	}
 	flag.StringVar(&cfg.Host, "host", "0.0.0.0", "Server host")
@@ -112,7 +121,11 @@ func main() {
 		Db:      db,
 		CodeTTL: cfg.LoginCodeTTL,
 	}
-	delivery := &services.ConsoleDelivery{Logger: logger}
+	dialer := gomail.NewDialer(cfg.SmtpHost, cfg.SmtpPort, cfg.SmtpUser, cfg.SmtpPassword)
+	dialer.SSL = true
+	delivery := &services.MailingService{
+		Dialer: dialer,
+	}
 
 	auth := &services.AuthService{
 		TokenTTL:   cfg.ActivationTokenTTL,

@@ -18,7 +18,7 @@ type LoginCodeStorage interface {
 }
 
 type CodeDelivery interface {
-	SendCode(ctx context.Context, email string, code string) error
+	SendCode(ctx context.Context, user *model.User, code string) error
 }
 
 type AuthService interface {
@@ -47,7 +47,7 @@ func (s *EmailSignInUseCase) RequestCode(ctx context.Context, userEmail string) 
 		}
 
 		text := fmt.Sprintf("Your activation code is: %s", code)
-		err = s.Delivery.SendCode(ctx, user.Email, text)
+		err = s.Delivery.SendCode(ctx, user, text)
 		return err
 	})
 }

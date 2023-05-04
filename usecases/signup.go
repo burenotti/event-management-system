@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/burenotti/rtu-it-lab-recruit/model"
 	"github.com/burenotti/rtu-it-lab-recruit/repositories"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -26,13 +27,14 @@ type UserActivator interface {
 }
 
 type TokenDelivery interface {
-	SendToken(ctx context.Context, email string, token string) error
+	SendActivationToken(ctx context.Context, user *model.User, token string) error
 }
 
 type SignUpUseCase struct {
 	UserRepo       UserStorage
 	ActivationRepo UserActivator
 	Delivery       TokenDelivery
+	Logger         *logrus.Logger
 }
 
 func (u *SignUpUseCase) SignUp(ctx context.Context, create *model.UserCreate) (*model.User, error) {
@@ -46,14 +48,22 @@ func (u *SignUpUseCase) SignUp(ctx context.Context, create *model.UserCreate) (*
 		return user, fmt.Errorf("%w: can't create activation token", ErrTokenSendFailed)
 	}
 
-	if err = u.Delivery.SendToken(ctx, user.Email, token.Token); err != nil {
-		return user, fmt.Errorf("%w: token Delivery failed", ErrTokenSendFailed)
+	u.Logger.
+		WithField("user_id", user.UserID).
+		Infof("Sending activation email to %d", user.UserID)
+	if err = u.Delivery.SendActivationToken(ctx, user, token.Token); err != nil {
+		u.Logger.
+			WithField("user_id", user.UserID).
+			WithError(err).
+			Info("Sending email activation failed: %v", err)
 	}
+
 	return user, nil
 }
 
 func (u *SignUpUseCase) ActivateWithToken(ctx context.Context, token string) error {
 	t, err := u.ActivationRepo.ValidateActivationToken(ctx, token)
+	u.Logger.WithField("user_id", t.UserId).Info("Activating user %d", t.UserId)
 	if err != nil {
 		return err
 	}
