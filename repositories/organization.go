@@ -195,6 +195,23 @@ func (r *OrganizationRepository) SetMemberRights(ctx context.Context, orgId, use
 	}, nil
 }
 
+func (r *OrganizationRepository) GetMember(ctx context.Context, orgId, userId int64) (*model.OrganizationMember, error) {
+	mem := &model.OrganizationMember{}
+	err := sqlf.From("organization_members").
+		Where("organizationId = ? AND user_id = ?", orgId, userId).
+		Select("user_id, can_manage_members, can_edit_events, is_owner").
+		Select("user_id").To(&mem.UserID).
+		Select("is_owner").To(&mem.IsOwner).
+		Select("can_edit_events").To(&mem.Can.EditEvents).
+		Select("can_manage_members").To(&mem.Can.ManageMembers).
+		QueryRowAndClose(ctx, r.db)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrMemberNotFound
+	}
+	return mem, err
+}
+
 func (r *OrganizationRepository) DeleteMember(ctx context.Context, orgId, userId int64) error {
 	res, err := sqlf.DeleteFrom("organization_members").
 		Where("organization_id = ? AND user_id = ?", orgId, userId).
