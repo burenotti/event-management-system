@@ -66,7 +66,7 @@ const docTemplate = `{
         "/auth/request": {
             "post": {
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -77,13 +77,11 @@ const docTemplate = `{
                 "summary": "Requests sending one time password to users email",
                 "parameters": [
                     {
+                        "type": "string",
                         "description": "Request data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.CodeRequest"
-                        }
+                        "name": "email",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -122,20 +120,23 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Email",
                         "name": "username",
-                        "in": "query",
+                        "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "One time code",
                         "name": "password",
-                        "in": "query",
+                        "in": "formData",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Token"
+                        }
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -775,15 +776,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.CodeRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "johndoe@example.com"
-                }
-            }
-        },
         "model.InviteCreate": {
             "type": "object",
             "properties": {
@@ -901,23 +893,42 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Token": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "model.UserCreate": {
             "type": "object",
             "properties": {
                 "email": {
                     "type": "string",
+                    "maxLength": 64,
+                    "minLength": 2,
                     "example": "johndoe@example.com"
                 },
                 "first_name": {
                     "type": "string",
+                    "maxLength": 32,
+                    "minLength": 2,
                     "example": "John"
                 },
                 "last_name": {
                     "type": "string",
+                    "maxLength": 32,
+                    "minLength": 2,
                     "example": "Doe"
                 },
                 "middle_name": {
                     "type": "string",
+                    "maxLength": 32,
+                    "minLength": 2,
                     "example": "Jr."
                 }
             }

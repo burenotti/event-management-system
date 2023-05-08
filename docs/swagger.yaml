@@ -19,12 +19,6 @@ definitions:
           $ref: '#/definitions/handler.FieldValidationError'
         type: array
     type: object
-  model.CodeRequest:
-    properties:
-      email:
-        example: johndoe@example.com
-        type: string
-    type: object
   model.InviteCreate:
     properties:
       from_user:
@@ -109,19 +103,34 @@ definitions:
         example: Российский технологический университет МИРЭА
         type: string
     type: object
+  model.Token:
+    properties:
+      access_token:
+        type: string
+      type:
+        type: string
+    type: object
   model.UserCreate:
     properties:
       email:
         example: johndoe@example.com
+        maxLength: 64
+        minLength: 2
         type: string
       first_name:
         example: John
+        maxLength: 32
+        minLength: 2
         type: string
       last_name:
         example: Doe
+        maxLength: 32
+        minLength: 2
         type: string
       middle_name:
         example: Jr.
+        maxLength: 32
+        minLength: 2
         type: string
     type: object
   model.UserGet:
@@ -186,14 +195,13 @@ paths:
   /auth/request:
     post:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       parameters:
       - description: Request data
-        in: body
-        name: request
+        in: formData
+        name: email
         required: true
-        schema:
-          $ref: '#/definitions/model.CodeRequest'
+        type: string
       produces:
       - application/json
       responses:
@@ -216,12 +224,12 @@ paths:
       - application/x-www-form-urlencoded
       parameters:
       - description: Email
-        in: query
+        in: formData
         name: username
         required: true
         type: string
       - description: One time code
-        in: query
+        in: formData
         name: password
         required: true
         type: string
@@ -230,6 +238,8 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/model.Token'
         "401":
           description: Unauthorized
           schema:
