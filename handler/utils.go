@@ -1,9 +1,11 @@
 package handler
 
 import (
-	"fmt"
+	"errors"
+	"github.com/burenotti/rtu-it-lab-recruit/repositories"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"reflect"
 	"strings"
 )
 
@@ -12,7 +14,6 @@ func JsonParseAndValidate[T any](ctx *fiber.Ctx, validate *validator.Validate) (
 	if err := ctx.BodyParser(obj); err != nil {
 		return nil, &HTTPError{Details: err.Error()}
 	}
-	fmt.Println(obj)
 	err := validate.Struct(obj)
 	if err != nil {
 		verr := err.(validator.ValidationErrors)
@@ -20,8 +21,10 @@ func JsonParseAndValidate[T any](ctx *fiber.Ctx, validate *validator.Validate) (
 			Fields: nil,
 		}
 		for _, e := range verr {
+			field, _ := reflect.TypeOf(*obj).FieldByName(e.StructField())
+			fieldName := strings.Split(field.Tag.Get("json"), ",")[0]
 			fieldErr := FieldValidationError{
-				Name:  e.Field(),
+				Name:  fieldName,
 				Error: e.Error(),
 			}
 			validationError.Fields = append(validationError.Fields, fieldErr)
