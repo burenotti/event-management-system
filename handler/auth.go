@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/burenotti/rtu-it-lab-recruit/model"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -28,9 +27,8 @@ func (h *HTTPHandler) SignUp(ctx *fiber.Ctx) error {
 		return jerr.AsFiberError(fiber.StatusUnprocessableEntity)
 	}
 	user, err := h.ucase.SignUp(ctx.Context(), u)
-
 	if err != nil {
-		return NewHTTPError(err.Error()).AsFiberError(fiber.StatusBadRequest)
+		return WrapError(err)
 	}
 
 	return ReturnJson(ctx, user)
@@ -52,12 +50,12 @@ func (h *HTTPHandler) SignUp(ctx *fiber.Ctx) error {
 func (h *HTTPHandler) ActivateWithToken(ctx *fiber.Ctx) error {
 	token := ctx.Params("token")
 	if token == "" {
-		return NewHTTPError("token is required path parameter").AsFiberError(400)
+		return NewHTTPError("token is required path parameter").AsFiberError(fiber.StatusBadRequest)
 	}
 	if err := h.ucase.ActivateWithToken(ctx.Context(), token); err != nil {
-		return NewHTTPError(err.Error()).AsFiberError(400)
+		return WrapError(err)
 	}
-	ctx.Status(204)
+	ctx.Status(fiber.StatusNoContent)
 	return nil
 }
 
@@ -65,10 +63,10 @@ func (h *HTTPHandler) ActivateWithToken(ctx *fiber.Ctx) error {
 //
 //	@Tags		Auth
 //	@Summary	Requests sending one time password to users email
-//	@Accept		json
+//	@Accept		x-www-form-urlencoded
 //	@Produce	json
 //
-//	@Param		request	body	model.CodeRequest	true	"Request data"
+//	@Param		email	formData	string	true	"Request data"
 //
 //	@Success	204
 //	@Failure	500	{object}	HTTPError
@@ -81,7 +79,7 @@ func (h *HTTPHandler) RequestEmailCode(ctx *fiber.Ctx) error {
 	}
 
 	if err := h.ucase.RequestCode(ctx.Context(), req.Email); err != nil {
-		return NewHTTPError(err.Error()).AsFiberError(400)
+		return WrapError(err)
 	}
 	return nil
 }
@@ -93,16 +91,15 @@ func (h *HTTPHandler) RequestEmailCode(ctx *fiber.Ctx) error {
 //	@Accept		x-www-form-urlencoded
 //	@Produce	json
 //
-//	@Param		username	query	string	true	"Email"
-//	@Param		password	query	string	true	"One time code"
+//	@Param		username	formData	string	true	"Email"
+//	@Param		password	formData	string	true	"One time code"
 //
-//	@Success	200
-//	@Failure	500	{object}	HTTPError
-//	@Failure	422	{object}	HTTPError
-//	@Failure	401	{object}	HTTPError
+//	@Success	200			{object}	model.Token
+//	@Failure	500			{object}	HTTPError
+//	@Failure	422			{object}	HTTPError
+//	@Failure	401			{object}	HTTPError
 //	@Router		/auth/sign-in [post]
 func (h *HTTPHandler) SignIn(ctx *fiber.Ctx) error {
-	fmt.Println(ctx.Get("Content-Type"))
 	req, jerr := JsonParseAndValidate[model.AuthCredentials](ctx, validate)
 	//fmt.Println(req.Email)
 	if jerr != nil {
@@ -111,7 +108,7 @@ func (h *HTTPHandler) SignIn(ctx *fiber.Ctx) error {
 	token, err := h.ucase.SignIn(ctx.Context(), req)
 
 	if err != nil {
-		return NewHTTPError(err.Error()).AsFiberError(400)
+		return WrapError(err)
 	}
 
 	return ReturnJson(ctx, model.NewAccessToken(token))
