@@ -1,12 +1,9 @@
 services:
-  app:
+  app-base:
     build:
       dockerfile: 'Dockerfile.dev'
     expose:
       - 80
-    ports:
-      - 8000:80
-      - 2345:2345 # Remote debug port
     env_file:
       - .env
     depends_on:
@@ -16,6 +13,20 @@ services:
     networks:
       - database
       - app
+
+  app:
+    extends:
+      service: app-base
+    ports:
+      - 8080:80
+
+  app-debug:
+    extends:
+      service: app-base
+    command: [ "/bin/ash", "/app/build-and-debug.sh" ]
+    ports:
+      - 8082:80
+      - 2345:2345
 
   docs:
     build:
