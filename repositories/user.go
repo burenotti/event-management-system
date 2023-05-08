@@ -9,8 +9,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	UsersPkeyName        = "users_pkey"
+	UsersEmailUniqueName = "unique_users_email"
+)
+
 var (
 	ErrUserNotFound = errors.New("user not found")
+	ErrUserExists   = errors.New("user already exists")
 	ErrLogicError   = errors.New("logic error")
 )
 
@@ -35,7 +41,9 @@ func (r *UserRepository) Create(ctx context.Context, u *model.UserCreate) (*mode
 		Returning("user_id").To(&userId).
 		QueryRow(ctx, r.db)
 
-	if err != nil {
+	if getViolatedConstraint(err) == UsersEmailUniqueName {
+		return nil, fmt.Errorf("%w: user with email '%s' already exists", ErrUserExists, u.Email)
+	} else if err != nil {
 		return nil, err
 	}
 
