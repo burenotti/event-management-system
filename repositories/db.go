@@ -12,6 +12,15 @@ func init() {
 	sqlf.SetDialect(sqlf.PostgreSQL)
 }
 
+type AtomicError struct {
+	InnerError       error
+	TransactionError error
+}
+
+func (e *AtomicError) Error() string {
+	return fmt.Sprintf("transaction error: %v\n inner error: %v", e.TransactionError, e.InnerError)
+}
+
 type AtomicFunc func(ctx context.Context) error
 
 type DbContext interface {
@@ -97,19 +106,28 @@ func (d *Database) Atomic(ctx context.Context, f AtomicFunc) error {
 	defer func() {
 		if err := recover(); err != nil {
 			if rbErr := tx.Rollback(); rbErr != nil {
-				panic(fmt.Errorf("rollback error: %v, inner error: %v", rbErr, err))
+				panic(&AtomicError{
+					InnerError:       fmt.Errorf("%v", err),
+					TransactionError: rbErr,
+				})
 			}
 			panic(err)
 		}
 	}()
 
 	if err != nil {
-		return fmt.Errorf("cannot begin transaction: %v", err)
+		return &AtomicError{
+			InnerError:       nil,
+			TransactionError: err,
+		}
 	}
 
 	if err = f(injectTx(ctx, tx)); err != nil {
 		rbErr := tx.Rollback()
-		return fmt.Errorf("rollback error: %v, inner error: %v", rbErr, err)
+		return &AtomicError{
+			InnerError:       err,
+			TransactionError: rbErr,
+		}
 	}
 
 	return tx.Commit()

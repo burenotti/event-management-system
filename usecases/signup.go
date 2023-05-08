@@ -63,10 +63,10 @@ func (u *SignUpUseCase) SignUp(ctx context.Context, create *model.UserCreate) (*
 
 func (u *SignUpUseCase) ActivateWithToken(ctx context.Context, token string) error {
 	t, err := u.ActivationRepo.ValidateActivationToken(ctx, token)
-	u.Logger.WithField("user_id", t.UserId).Info("Activating user %d", t.UserId)
 	if err != nil {
 		return err
 	}
+	u.Logger.WithField("user_id", t.UserId).Info("Activating user %d", t.UserId)
 
 	_, err = u.UserRepo.Update(ctx, t.UserId, repositories.UpdatesMap{
 		"is_active": true,
