@@ -71,7 +71,7 @@ func (r *UserRepository) GetById(ctx context.Context, userId int64) (*model.User
 		QueryRow(ctx, r.db)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("%v: user with provided id does not exist", ErrUserNotFound)
+		return nil, fmt.Errorf("%w: user with provided id does not exist", ErrUserNotFound)
 	} else if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.U
 		QueryRow(ctx, r.db)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("%v: user with provided id does not exist", ErrUserNotFound)
+		return nil, fmt.Errorf("%w: user with provided id does not exist", ErrUserNotFound)
 	} else if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (r *UserRepository) Update(ctx context.Context, userId int64, update map[st
 
 	for key, upd := range update {
 		if _, ok := fields[key]; !ok {
-			return nil, fmt.Errorf("%v: could not update field '%s'", ErrLogicError, upd)
+			return nil, fmt.Errorf("%w: could not update field '%s'", ErrLogicError, upd)
 		}
 		query = query.Set(key, upd)
 	}
@@ -129,7 +129,7 @@ func (r *UserRepository) Update(ctx context.Context, userId int64, update map[st
 	err := query.QueryRow(ctx, r.db)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("%v: user with provided id does not exist", ErrUserNotFound)
+		return nil, fmt.Errorf("%w: user with provided id does not exist", ErrUserNotFound)
 	} else if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (r *UserRepository) Delete(ctx context.Context, userId int64) error {
 		return err
 	}
 	if count == 0 {
-		return fmt.Errorf("%v: user with provided id does not exist", ErrUserNotFound)
+		return fmt.Errorf("%w: user with provided id does not exist", ErrUserNotFound)
 	}
 	return nil
 }

@@ -64,7 +64,7 @@ func (r *OrganizationRepository) GetById(ctx context.Context, orgId int64) (*mod
 		QueryRow(ctx, r.db)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("%v: organization with provided id does not exist", ErrOrganizationNotFound)
+		return nil, fmt.Errorf("%w: organization with provided id does not exist", ErrOrganizationNotFound)
 	} else if err != nil {
 		return nil, err
 	}
@@ -86,14 +86,14 @@ func (r *OrganizationRepository) Update(ctx context.Context, orgId int64, update
 
 	for key, upd := range updates {
 		if _, ok := fields[key]; !ok {
-			return nil, fmt.Errorf("%v: could not update field '%r'", ErrLogicError, upd)
+			return nil, fmt.Errorf("%w: could not update field '%v'", ErrLogicError, upd)
 		}
 		query = query.Set(key, upd)
 	}
 
 	err := query.QueryRow(ctx, r.db)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("%v: organization with provided id does not exist", ErrOrganizationNotFound)
+		return nil, fmt.Errorf("%w: organization with provided id does not exist", ErrOrganizationNotFound)
 	} else if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (r *OrganizationRepository) Delete(ctx context.Context, orgId int64) error 
 		return err
 	}
 	if count == 0 {
-		return fmt.Errorf("%v: organization with provided id does not exist", ErrOrganizationNotFound)
+		return fmt.Errorf("%w: organization with provided id does not exist", ErrOrganizationNotFound)
 	}
 	return nil
 }
