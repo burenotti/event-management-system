@@ -1,10 +1,10 @@
 package model
 
 type OrganizationCreate struct {
-	Name         string  `json:"name" example:"Российский технологический университет МИРЭА"`
-	Address      *string `json:"address,omitempty" example:"Г. Москва, Пр-т. Вернадского 78"`
-	ContactEmail *string `json:"contact_email,omitempty" example:"contact@mirea.ru"`
-	ContactPhone *string `json:"contact_phone,omitempty" example:"74992156565"`
+	Name         string  `json:"name" validate:"required,min=3,max=256" example:"Российский технологический университет МИРЭА"`
+	Address      *string `json:"address,omitempty" validate:"omitempty,min=3,max=256" example:"Г. Москва, Пр-т. Вернадского 78"`
+	ContactEmail *string `json:"contact_email,omitempty" validate:"omitempty,email,max=64"  example:"contact@mirea.ru"`
+	ContactPhone *string `json:"contact_phone,omitempty" validate:"omitempty,number,len=11,startswith=7" example:"74992156565"`
 }
 
 type Organization struct {
@@ -24,10 +24,10 @@ type OrganizationGet struct {
 }
 
 type OrganizationUpdate struct {
-	Name         *string `json:"name" example:"Российский технологический университет МИРЭА"`
-	Address      *string `json:"address,omitempty" example:"Г. Москва, Пр-т. Вернадского 78"`
-	ContactEmail *string `json:"contact_email,omitempty" example:"contact@mirea.ru"`
-	ContactPhone *string `json:"contact_phone,omitempty" example:"74992156565"`
+	Name         string  `json:"name" validate:"required,min=3,max=256" example:"Российский технологический университет МИРЭА"`
+	Address      *string `json:"address,omitempty" validate:"omitempty,min=3,max=256" example:"Г. Москва, Пр-т. Вернадского 78"`
+	ContactEmail *string `json:"contact_email,omitempty" validate:"omitempty,email,max=64"  example:"contact@mirea.ru"`
+	ContactPhone *string `json:"contact_phone,omitempty" validate:"omitempty,number,len=11,startswith=7" example:"74992156565"`
 }
 
 type OrganizationMemberCreate struct {
