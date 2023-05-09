@@ -15,6 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/gomail.v2"
+	"html/template"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,18 +23,20 @@ import (
 )
 
 type Config struct {
-	Host               string
-	Port               string
-	AppName            string
-	DbDsn              string
-	SmtpHost           string
-	SmtpPort           int
-	SmtpUser           string
-	SmtpPassword       string
-	LoginCodeTTL       time.Duration
-	AuthTokenTTL       time.Duration
-	ActivationTokenTTL time.Duration
-	PrivateKey         *rsa.PrivateKey
+	Host                        string
+	Port                        string
+	AppName                     string
+	DbDsn                       string
+	SmtpHost                    string
+	SmtpPort                    int
+	SmtpUser                    string
+	SmtpPassword                string
+	ActivationEmailTemplatePath string
+	PassCodeEmailTemplatePath   string
+	LoginCodeTTL                time.Duration
+	AuthTokenTTL                time.Duration
+	ActivationTokenTTL          time.Duration
+	PrivateKey                  *rsa.PrivateKey
 }
 
 func (c *Config) Addr() string {
@@ -56,16 +59,18 @@ func ParseConfig() *Config {
 	privateKey := ReadPrivateKeyFromFile(viper.GetString("PRIVATE_KEY_PATH"))
 
 	cfg := Config{
-		AppName:            "RTUITLab recruitment",
-		DbDsn:              viper.GetString("DB_DSN"),
-		LoginCodeTTL:       viper.GetDuration("LOGIN_CODE_TTL"),
-		AuthTokenTTL:       viper.GetDuration("AUTH_TOKEN_TTL"),
-		ActivationTokenTTL: viper.GetDuration("ACTIVATION_TOKEN_TTL"),
-		SmtpHost:           viper.GetString("SMTP_HOST"),
-		SmtpUser:           viper.GetString("SMTP_USER"),
-		SmtpPort:           viper.GetInt("SMTP_PORT"),
-		SmtpPassword:       viper.GetString("SMTP_PASSWORD"),
-		PrivateKey:         privateKey,
+		AppName:                     "RTUITLab recruitment",
+		DbDsn:                       viper.GetString("DB_DSN"),
+		LoginCodeTTL:                viper.GetDuration("LOGIN_CODE_TTL"),
+		AuthTokenTTL:                viper.GetDuration("AUTH_TOKEN_TTL"),
+		ActivationTokenTTL:          viper.GetDuration("ACTIVATION_TOKEN_TTL"),
+		SmtpHost:                    viper.GetString("SMTP_HOST"),
+		SmtpUser:                    viper.GetString("SMTP_USER"),
+		SmtpPort:                    viper.GetInt("SMTP_PORT"),
+		SmtpPassword:                viper.GetString("SMTP_PASSWORD"),
+		ActivationEmailTemplatePath: viper.GetString("ACTIVATION_EMAIL_TEMPLATE"),
+		PassCodeEmailTemplatePath:   viper.GetString("PASS_CODE_EMAIL_TEMPLATE"),
+		PrivateKey:                  privateKey,
 	}
 	flag.StringVar(&cfg.Host, "host", "0.0.0.0", "Server host")
 	flag.StringVar(&cfg.Port, "port", "80", "Server port")
@@ -122,12 +127,36 @@ func main() {
 		CodeTTL: cfg.LoginCodeTTL,
 	}
 	dialer := gomail.NewDialer(cfg.SmtpHost, cfg.SmtpPort, cfg.SmtpUser, cfg.SmtpPassword)
-	dialer.SSL = true
-	//delivery := &services.MailingService{
-	//	Dialer: dialer,
-	//}
+	dialer.SSL = false
+	mailingService := &services.MailingService{
+		Dialer: dialer,
+		Cfg: services.MailingConfig{
+			FromAddress: "burenotti@gmail.com",
+			FromName:    "Contact",
+			Subject:     "Не отвечайте на это сообщение",
+			ContentType: "text/plain",
+		},
+	}
 
-	delivery := &services.ConsoleDelivery{Logger: logger}
+	activationEmailTemplate, err := template.ParseFiles(cfg.ActivationEmailTemplatePath)
+	if err != nil {
+		logger.WithError(err).Fatalf("can't parse activation email template")
+	}
+
+	activationTokenDelivery := &services.ActivationTokenDelivery{
+		MailTemplate: activationEmailTemplate,
+		Delivery:     mailingService,
+	}
+
+	passCodeEmailTemplate, err := template.ParseFiles(cfg.PassCodeEmailTemplatePath)
+	if err != nil {
+		logger.WithError(err).Fatalf("can't parse pass code email template")
+	}
+
+	passCodeDelivery := &services.PassCodeDelivery{
+		MailTemplate: passCodeEmailTemplate,
+		Delivery:     mailingService,
+	}
 
 	auth := &services.AuthService{
 		TokenTTL:   cfg.ActivationTokenTTL,
@@ -145,14 +174,14 @@ func main() {
 		EmailSignInUseCase: usecases.EmailSignInUseCase{
 			UserStore:      userStore,
 			LoginCodeStore: loginCodeStore,
-			Delivery:       delivery,
+			Delivery:       passCodeDelivery,
 			Transactioner:  db,
 			Auth:           auth,
 		},
 		SignUpUseCase: usecases.SignUpUseCase{
 			UserRepo:       userStore,
 			ActivationRepo: activationRepo,
-			Delivery:       delivery,
+			Delivery:       activationTokenDelivery,
 			Logger:         logger,
 		},
 		OrganizationUseCase: usecases.OrganizationUseCase{

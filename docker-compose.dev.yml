@@ -18,7 +18,7 @@ services:
     extends:
       service: app-base
     ports:
-      - 8080:80
+      - 8000:80
 
   app-debug:
     extends:
