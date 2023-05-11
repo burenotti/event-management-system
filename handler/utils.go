@@ -41,15 +41,6 @@ func ReturnJson(ctx *fiber.Ctx, obj interface{}) error {
 	return nil
 }
 
-func GetToken(ctx *fiber.Ctx) string {
-	header := ctx.Get("Authorization")
-	parts := strings.Split(header, " ")
-	if len(parts) != 2 {
-		return ""
-	}
-	return parts[1]
-}
-
 func UnwrapAtomicError(err error) error {
 	if err == nil {
 		return nil

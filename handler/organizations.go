@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"fmt"
+	"github.com/burenotti/rtu-it-lab-recruit/handler/middlewares/auth"
 	"github.com/burenotti/rtu-it-lab-recruit/model"
 	"github.com/gofiber/fiber/v2"
 )
@@ -26,15 +28,8 @@ func (h *HTTPHandler) CreateOrganization(ctx *fiber.Ctx) error {
 	if jerr != nil {
 		return jerr.AsFiberError(422)
 	}
-	var tokenString string
-	if tokenString = GetToken(ctx); tokenString == "" {
-		return ErrTokenIsNotProvided
-	}
 
-	user, err := h.ucase.ValidateToken(ctx.Context(), tokenString)
-	if err != nil {
-		return NewHTTPError(err.Error()).AsFiberError(400)
-	}
+	user, _ := auth.GetAuth(ctx)
 
 	createdOrg, err := h.ucase.CreateOrganization(ctx.Context(), user.UserID, org)
 	if err != nil {
@@ -57,7 +52,17 @@ func (h *HTTPHandler) CreateOrganization(ctx *fiber.Ctx) error {
 //	@Failure	500				{object}	HTTPError
 //	@Router		/organization/{organization_id} [get]
 func (h *HTTPHandler) GetOrganization(ctx *fiber.Ctx) error {
-	return (&HTTPError{Details: "NotImplemented"}).AsFiberError(501)
+	orgId, err := getOrganizationId(ctx)
+	if err != nil {
+		return err
+	}
+
+	org, err := h.ucase.OrganizationUseCase.GetOrganization(ctx.Context(), orgId)
+	if err != nil {
+		return WrapError(err)
+	}
+	ctx.Status(fiber.StatusOK)
+	return ReturnJson(ctx, org)
 }
 
 // UpdateOrganization
@@ -90,5 +95,28 @@ func (h *HTTPHandler) UpdateOrganization(ctx *fiber.Ctx) error {
 //	@Failure	500				{object}	HTTPError
 //	@Router		/organization/{organization_id} [delete]
 func (h *HTTPHandler) DeleteOrganization(ctx *fiber.Ctx) error {
-	return (&HTTPError{Details: "NotImplemented"}).AsFiberError(501)
+
+	user, _ := auth.GetAuth(ctx)
+
+	orgId, err := getOrganizationId(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = h.ucase.OrganizationUseCase.DeleteOrganization(ctx.Context(), user, orgId)
+	ctx.Status(fiber.StatusOK)
+	return WrapError(err)
+}
+
+func getOrganizationId(ctx *fiber.Ctx) (int64, error) {
+	orgIdRaw := ctx.Params("organization_id")
+	if orgIdRaw == "" {
+		return 0, NewHTTPError("organization_id is required path parameter").
+			AsFiberError(422)
+	}
+	var orgId int64
+	if _, err := fmt.Sscanf(orgIdRaw, "%d", &orgId); err != nil {
+		return 0, NewHTTPError("organization_id must be a number").AsFiberError(422)
+	}
+	return orgId, nil
 }
