@@ -2,7 +2,14 @@ package usecases
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/burenotti/rtu-it-lab-recruit/model"
+	"github.com/burenotti/rtu-it-lab-recruit/repositories"
+)
+
+var (
+	ErrBusinessLogicViolation = errors.New("business logic violation: ")
 )
 
 type OrganizationStorage interface {
@@ -41,4 +48,25 @@ func (c *OrganizationUseCase) CreateOrganization(ctx context.Context, userId int
 		return err
 	})
 	return createdOrg, err
+}
+
+func (c *OrganizationUseCase) GetOrganization(ctx context.Context, orgId int64) (*model.Organization, error) {
+	return c.OrganizationStorage.GetById(ctx, orgId)
+}
+
+func (c *OrganizationUseCase) DeleteOrganization(ctx context.Context, user *model.AuthPayload, orgId int64) error {
+	return c.Transactioner.Atomic(ctx, func(ctx context.Context) error {
+		errLogic := fmt.Errorf("%w: only member can delete organization", ErrBusinessLogicViolation)
+
+		mem, err := c.OrganizationStorage.GetMember(ctx, orgId, user.UserID)
+		if errors.Is(err, repositories.ErrMemberNotFound) {
+			return errLogic
+		} else if err != nil {
+			return err
+		}
+		if !mem.IsOwner {
+			return errLogic
+		}
+		return c.OrganizationStorage.Delete(ctx, orgId)
+	})
 }
