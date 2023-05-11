@@ -2,12 +2,14 @@ package handler
 
 import (
 	_ "github.com/burenotti/rtu-it-lab-recruit/docs"
+	"github.com/burenotti/rtu-it-lab-recruit/handler/middlewares/auth"
+	"github.com/burenotti/rtu-it-lab-recruit/handler/middlewares/logging"
 	"github.com/burenotti/rtu-it-lab-recruit/services"
 	"github.com/burenotti/rtu-it-lab-recruit/usecases"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/swagger"
+	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 )
 
@@ -42,11 +44,11 @@ type UseCases struct {
 	usecases.OrganizationUseCase
 }
 
-func New(ucase UseCases, config *Config) *HTTPHandler {
+func New(logger *logrus.Logger, ucase UseCases, config *Config) *HTTPHandler {
 	app := fiber.New(fiber.Config{
 		AppName: config.Name,
 	})
-	app.Use(logger.New())
+	app.Use(logging.New(logging.Config{Logger: logger}))
 	app.Use(recover.New(recover.Config{}))
 	handler := &HTTPHandler{
 		ucase: ucase,
@@ -57,6 +59,7 @@ func New(ucase UseCases, config *Config) *HTTPHandler {
 }
 
 func (h *HTTPHandler) Mount() {
+	authRequired := auth.New(&h.ucase.AuthService)
 	h.app.Get("/docs/*", swagger.HandlerDefault)
 	auth := h.app.Group("/auth")
 	{
@@ -66,14 +69,14 @@ func (h *HTTPHandler) Mount() {
 		auth.Post("/sign-in", h.SignIn)
 	}
 
-	organizations := h.app.Group("/organization")
+	organizations := h.app.Group("/organization", authRequired)
 	{
 		organizations.Post("/", h.CreateOrganization)
 		organizations.Get("/:organization_id", h.GetOrganization)
 		organizations.Patch("/:organization_id", h.UpdateOrganization)
 		organizations.Delete("/:organization_id", h.DeleteOrganization)
 	}
-	invites := h.app.Group("/organization/:organization_id/invite")
+	invites := h.app.Group("/organization/:organization_id/invite", authRequired)
 	{
 		invites.Post("/", h.InviteToOrganization)
 		invites.Get("/", h.ListInvites)

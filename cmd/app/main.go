@@ -193,7 +193,7 @@ func main() {
 			PrivateKey: cfg.PrivateKey,
 		},
 	}
-	http := handler.New(ucase, cfg.HandlerConfig())
+	http := handler.New(logger, ucase, cfg.HandlerConfig())
 	logger.Infof("Server run on %s", cfg.Addr())
 	srv := httpserver.New(cfg.Addr(), http.Handler(), logger)
 
